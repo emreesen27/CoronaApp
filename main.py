@@ -12,7 +12,7 @@ html_content = response.content
 soup = BeautifulSoup(html_content, "html.parser")
 worldCases = []
 for i in soup.find_all("div", {"class": "maincounter-number"}):
-    worldCases.append(i.text.strip().replace(",", ""))
+    worldCases.append(i.text)
 
 
 class CircularGraphic(QWidget):
@@ -82,11 +82,13 @@ class CircularGraphic(QWidget):
 
         graphic = QChart()
         graphic.setTitle("World Corona Status")
-        cases = float(worldCases[0])
-        deaths = float(worldCases[1])
-        recovered = float(worldCases[2])
+        cases = float(worldCases[0].strip().replace(",", ""))
+        deaths = float(worldCases[1].strip().replace(",", ""))
+        recovered = float(worldCases[2].strip().replace(",", ""))
 
-        data_list = [("Cases", cases), ("Deaths", deaths), ("Recovered", recovered)]
+        data_list = [("Cases:" + worldCases[0], cases),
+                     ("Deaths:" + worldCases[1], deaths),
+                     ("Recovered:" + worldCases[2], recovered)]
 
         series = QPieSeries(graphic)
         for tag, valor in data_list:
@@ -123,7 +125,6 @@ class CircularGraphic(QWidget):
 
         label = self.m_chartView.chart().legend()
 
-
         labelPosition = self.m_labelComboBox.itemData(self.m_labelComboBox.currentIndex())
 
         if labelPosition == 0:
@@ -159,7 +160,6 @@ if __name__ == "__main__":
     application.setFont(font)
 
     window = QMainWindow()
-    window.setWindowIcon(QIcon("Qt.png"))
     window.setWindowTitle("Corona App")
     window.setMinimumSize(900, 500)
 
