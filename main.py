@@ -6,13 +6,22 @@ from PyQt5.QtCore import Qt, QTranslator, QLocale, QLibraryInfo, pyqtSlot
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QGridLayout, QVBoxLayout,
                              QLabel, QComboBox, QSizePolicy, QCheckBox)
 
-url = "https://www.worldometers.info/coronavirus/"
-response = requests.get(url)
-html_content = response.content
-soup = BeautifulSoup(html_content, "html.parser")
-worldCases = []
-for i in soup.find_all("div", {"class": "maincounter-number"}):
-    worldCases.append(i.text)
+
+def request(country="World"):
+    if country == "World":
+        url = "https://www.worldometers.info/coronavirus/"
+    else:
+        url = "https://www.worldometers.info/coronavirus/country/" + country
+
+    print(url)
+    response = requests.get(url)
+    print(response.status_code)
+    html_content = response.content
+    soup = BeautifulSoup(html_content, "html.parser")
+    worldCases = []
+    for i in soup.find_all("div", {"class": "maincounter-number"}):
+        worldCases.append(i.text)
+    return worldCases
 
 
 class CircularGraphic(QWidget):
@@ -25,6 +34,7 @@ class CircularGraphic(QWidget):
         self.m_themaComboBox = self.addThemaItem()
         self.m_labelComboBox = self.addLabelItem()
         self.m_indicatorMarkerComboBox = self.addIndicatorItem()
+        self.m_countryComboBox = self.addCountryItem()
         self.m_showLabelCheckBox = QCheckBox("Show Label")
 
         chartView = QChartView(self.createGraphicCircular())
@@ -38,8 +48,10 @@ class CircularGraphic(QWidget):
         designConfiguracion.addWidget(self.m_themaComboBox)
         designConfiguracion.addWidget(QLabel("Label:"))
         designConfiguracion.addWidget(self.m_labelComboBox)
-        designConfiguracion.addWidget(QLabel("Indicator Marker: "))
+        designConfiguracion.addWidget(QLabel("Indicator Marker:"))
         designConfiguracion.addWidget(self.m_indicatorMarkerComboBox)
+        designConfiguracion.addWidget(QLabel("Country:"))
+        designConfiguracion.addWidget(self.m_countryComboBox)
         designConfiguracion.addWidget(self.m_showLabelCheckBox)
         designConfiguracion.addStretch()
 
@@ -52,9 +64,17 @@ class CircularGraphic(QWidget):
         self.m_themaComboBox.currentIndexChanged.connect(self.updateUI)
         self.m_labelComboBox.currentIndexChanged.connect(self.updateUI)
         self.m_indicatorMarkerComboBox.currentIndexChanged.connect(self.updateUI)
+        self.m_countryComboBox.currentIndexChanged.connect(self.updateChart)
         self.m_showLabelCheckBox.toggled.connect(self.updateUI)
         self.m_showLabelCheckBox.setChecked(True)
         self.updateUI()
+
+    def addCountryItem(self):
+        country = QComboBox()
+        countryList = ["World", "Brazil", "Canada", "China", "France", "Germany", "India", "Iran", "Italy", "Russia", "Turkey", "Spain", "US"]
+        for option in countryList:
+            country.addItem(QIcon("images/" + option + ".gif"), option)
+        return country
 
     def addThemaItem(self):
         thema = QComboBox()
@@ -79,25 +99,46 @@ class CircularGraphic(QWidget):
         return indicatorMarkerComboBox
 
     def createGraphicCircular(self):
-
+        response = request("World")
         graphic = QChart()
         graphic.setTitle("World Corona Status")
-        cases = float(worldCases[0].strip().replace(",", ""))
-        deaths = float(worldCases[1].strip().replace(",", ""))
-        recovered = float(worldCases[2].strip().replace(",", ""))
+        cases = float(response[0].strip().replace(",", ""))
+        deaths = float(response[1].strip().replace(",", ""))
+        recovered = float(response[2].strip().replace(",", ""))
 
-        data_list = [("Cases:" + worldCases[0], cases),
-                     ("Deaths:" + worldCases[1], deaths),
-                     ("Recovered:" + worldCases[2], recovered)]
+        data_list = [("Cases:" + response[0], cases),
+                     ("Deaths:" + response[1], deaths),
+                     ("Recovered:" + response[2], recovered)]
 
         series = QPieSeries(graphic)
         for tag, valor in data_list:
-            slice = series.append(tag, valor)
+            series.append(tag, valor)
 
         graphic.addSeries(series)
         graphic.createDefaultAxes()
 
         return graphic
+
+    def updateChart(self):
+        country = str(self.m_countryComboBox.currentText())
+        response = request(country)
+
+        cases = float(response[0].strip().replace(",", ""))
+        deaths = float(response[1].strip().replace(",", ""))
+        recovered =float(response[2].strip().replace(",", ""))
+
+        data_list = [("Cases:" + response[0], cases),
+                     ("Deaths:" + response[1], deaths),
+                     ("Recovered:" + response[2], recovered)]
+
+        self.m_chartView.chart().removeAllSeries()
+        series = QPieSeries(self.m_chartView.chart())
+
+        for tag, valor in data_list:
+            series.append(tag, valor)
+        self.m_chartView.chart().setTitle(country + " Corona Status")
+        self.m_chartView.chart().addSeries(series)
+        self.updateUI()
 
     @pyqtSlot()
     def updateUI(self):
