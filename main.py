@@ -136,7 +136,7 @@ class CircularGraphic(QWidget):
 
         for tag, valor in data_list:
             series.append(tag, valor)
-
+        self.m_chartView.chart().setTitle(country + " Corona Status")
         self.m_chartView.chart().addSeries(series)
         self.updateUI()
 
