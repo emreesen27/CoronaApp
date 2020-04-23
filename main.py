@@ -10,12 +10,12 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QGridLayout, QV
 def request(country="World"):
     if country == "World":
         url = "https://www.worldometers.info/coronavirus/"
+    elif country == "USA":
+        url = "https://www.worldometers.info/coronavirus/country/us"
     else:
         url = "https://www.worldometers.info/coronavirus/country/" + country
 
-    print(url)
     response = requests.get(url)
-    print(response.status_code)
     html_content = response.content
     soup = BeautifulSoup(html_content, "html.parser")
     worldCases = []
@@ -71,9 +71,10 @@ class CircularGraphic(QWidget):
 
     def addCountryItem(self):
         country = QComboBox()
-        countryList = ["World", "Brazil", "Canada", "China", "France", "Germany", "India", "Iran", "Italy", "Russia", "Turkey", "Spain", "US"]
+        countryList = ["World", "Brazil", "Canada", "China", "France", "Germany", "India", "Iran", "Italy", "Russia",
+                       "Turkey", "Spain", "USA"]
         for option in countryList:
-            country.addItem(QIcon("images/" + option + ".gif"), option)
+            country.addItem(QIcon("images/" + option + ".png"), option)
         return country
 
     def addThemaItem(self):
@@ -125,7 +126,7 @@ class CircularGraphic(QWidget):
 
         cases = float(response[0].strip().replace(",", ""))
         deaths = float(response[1].strip().replace(",", ""))
-        recovered =float(response[2].strip().replace(",", ""))
+        recovered = float(response[2].strip().replace(",", ""))
 
         data_list = [("Cases:" + response[0], cases),
                      ("Deaths:" + response[1], deaths),
