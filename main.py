@@ -15,6 +15,7 @@ def request(country="World"):
 
     print(url)
     response = requests.get(url)
+    print(response.status_code)
     html_content = response.content
     soup = BeautifulSoup(html_content, "html.parser")
     worldCases = []
@@ -70,9 +71,9 @@ class CircularGraphic(QWidget):
 
     def addCountryItem(self):
         country = QComboBox()
-        country.addItem("World")
-        country.addItem("Turkey")
-        country.addItem("Spain")
+        countryList = ["World", "Brazil", "Canada", "China", "France", "Germany", "India", "Iran", "Italy", "Russia", "Turkey", "Spain", "US"]
+        for option in countryList:
+            country.addItem(QIcon("images/" + option + ".gif"), option)
         return country
 
     def addThemaItem(self):
@@ -99,7 +100,6 @@ class CircularGraphic(QWidget):
 
     def createGraphicCircular(self):
         response = request("World")
-
         graphic = QChart()
         graphic.setTitle("World Corona Status")
         cases = float(response[0].strip().replace(",", ""))
@@ -125,7 +125,7 @@ class CircularGraphic(QWidget):
 
         cases = float(response[0].strip().replace(",", ""))
         deaths = float(response[1].strip().replace(",", ""))
-        recovered = float(response[2].strip().replace(",", ""))
+        recovered =float(response[2].strip().replace(",", ""))
 
         data_list = [("Cases:" + response[0], cases),
                      ("Deaths:" + response[1], deaths),
